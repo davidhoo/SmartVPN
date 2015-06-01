@@ -1,0 +1,17 @@
+#!/bin/sh
+export PATH="/bin:/sbin:/usr/sbin:/usr/bin"
+
+if [ ! -e /tmp/pptp_oldgw ]; then
+        exit 0
+fi
+
+source /etc/ppp/chnroutes-down
+
+# 根据指定wifi，添加特定路由。适用于渣浪这种，很多内网ip的情况,有需要自己打开下面注释，根据自己情况修改sina-down
+currentwifi=Current Wi-Fi Network: sina-web
+if [[  !=  ]]
+then
+    source /etc/ppp/sina-down
+fi
+
+rm /tmp/pptp_oldgw
