@@ -1,23 +1,22 @@
-#!/bin/bash
+#!/bin/sh
 
 echo "update ip-up"
 cat >ip-up <<EOF
-#!/bin/bash
+#!/bin/sh
 export PATH="/bin:/sbin:/usr/sbin:/usr/bin"
-OLDGW=`netstat -nr | grep '^default' | grep -v 'ppp' | sed 's/default *\([0-9\.]*\) .*/\1/'`
 
-if [ ! -e /tmp/pptp_oldgw ]; then
-    echo "${OLDGW}" > /tmp/pptp_oldgw
-fi
+echo "ip-up beging ..." > /tmp/ppp.log
+chmod +r /tmp/ppp.log
+echo \$# parameters is: \$@ >> /tmp/ppp.log
 
 dscacheutil -flushcache
-source /etc/ppp/chnroutes-up
+sh /etc/ppp/chnroutes-up \$6
 
 # 根据指定wifi，添加特定路由。适用于渣浪这种，很多内网ip的情况,有需要自己打开下面注释，根据自己情况修改sina-up
-# currentwifi=`networksetup -getairportnetwork 'en0'`
-# if [[ ${currentwifi/sina//} != $currentwifi ]]
+# currentwifi=\`networksetup -getairportnetwork 'en0'\`
+# if [[ \${currentwifi/sina//} != \$currentwifi ]]
 # then
-#     source /etc/ppp/sina-up
+#     sh /etc/ppp/sina-up \$6
 # fi
 EOF
 
@@ -26,37 +25,44 @@ cat >ip-down <<EOF
 #!/bin/sh
 export PATH="/bin:/sbin:/usr/sbin:/usr/bin"
 
-if [ ! -e /tmp/pptp_oldgw ]; then
-        exit 0
-fi
+echo "ip-down beging ..." >> /tmp/ppp.log
+echo \$# parameters is: \$@ >> /tmp/ppp.log
 
-source /etc/ppp/chnroutes-down
+sh /etc/ppp/chnroutes-down \$6
 
-# 根据指定wifi，添加特定路由。适用于渣浪这种，很多内网ip的情况,有需要自己打开下面注释，根据自己情况修改sina-down
-currentwifi=`networksetup -getairportnetwork 'en0'`
-if [[ ${currentwifi/sina//} != $currentwifi ]]
+currentwifi=\`networksetup -getairportnetwork 'en0'\`
+if [[ \${currentwifi/sina//} != \$currentwifi ]]
 then
-    source /etc/ppp/sina-down
+    sh /etc/ppp/sina-down \$6
 fi
-
-rm /tmp/pptp_oldgw
 EOF
 
-echo "update china ip list"
-ips=`curl 'http://ftp.apnic.net/apnic/stats/apnic/delegated-apnic-latest' | grep 'apnic|CN|ipv4' | cut -d \| -f 4,5`
+echo "update china ip list ..."
+ips=`curl -s 'https://raw.githubusercontent.com/17mon/china_ip_list/master/china_ip_list.txt'`
 
-echo 'OLDGW=`cat /tmp/pptp_oldgw`' > chnroutes-up
-echo 'OLDGW=`cat /tmp/pptp_oldgw`' > chnroutes-down
+cat >chnroutes-up <<EOF
+#!/bin/sh
+
+echo "chnroutes-up beging ..." >> /tmp/ppp.log
+echo \$# parameters is: \$@ >> /tmp/ppp.log
+EOF
+
+cat >chnroutes-down <<EOF
+#!/bin/sh
+
+echo "chnroutes-down beging ..." >> /tmp/ppp.log
+echo \$# parameters is: \$@ >> /tmp/ppp.log
+EOF
 
 ipindex=0
-for iplist in $ips
+for ip in $ips
 do
     let ipindex=$ipindex+1
     if [ $[ $ipindex % 100 ] = 0 ];
     then
         printf .
     fi
-    echo $iplist | awk -F \| '{printf("route add %s/%s $\{OLDGW\}\n", $1, 32-(log($2)/log(2)))}' >> chnroutes-up
-    echo $iplist | awk -F \| '{printf("route delete %s/%s $\{OLDGW\}\n", $1, 32-(log($2)/log(2)))}' >> chnroutes-down
+    echo route add $ip \$1 >> chnroutes-up
+    echo route delete $ip \$1 >> chnroutes-down
 done
 echo "done"
