@@ -1,3 +1,8 @@
+#!/bin/sh
+
+echo "sina-up beging ..." >> /tmp/ppp.log
+echo $# parameters is: $@ >> /tmp/ppp.log
+
 route -n add -net 10.0.0.0/8 ${1}
 route -n add -net 10.13.0.0/16 ${1}
 route -n add -net 172.16.0.0/16 ${1}

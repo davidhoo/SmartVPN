@@ -10,13 +10,17 @@ chmod +r /tmp/ppp.log
 echo \$# parameters is: \$@ >> /tmp/ppp.log
 
 dscacheutil -flushcache
-sh /etc/ppp/chnroutes-up \$6
+
+exec 1>&-
+exec 2>&-
+
+(sh /etc/ppp/chnroutes-up \$6) &
 
 # 根据指定wifi，添加特定路由。适用于渣浪这种，很多内网ip的情况,有需要自己打开下面注释，根据自己情况修改sina-up
 # currentwifi=\`networksetup -getairportnetwork 'en0'\`
 # if [[ \${currentwifi/sina//} != \$currentwifi ]]
 # then
-#     sh /etc/ppp/sina-up \$6
+#     (sh /etc/ppp/sina-up \$6) &
 # fi
 EOF
 
@@ -28,12 +32,15 @@ export PATH="/bin:/sbin:/usr/sbin:/usr/bin"
 echo "ip-down beging ..." >> /tmp/ppp.log
 echo \$# parameters is: \$@ >> /tmp/ppp.log
 
-sh /etc/ppp/chnroutes-down \$6
+exec 1>&-
+exec 2>&-
+
+(sh /etc/ppp/chnroutes-down \$6) &
 
 currentwifi=\`networksetup -getairportnetwork 'en0'\`
 if [[ \${currentwifi/sina//} != \$currentwifi ]]
 then
-    sh /etc/ppp/sina-down \$6
+    (sh /etc/ppp/sina-down \$6) &
 fi
 EOF
 
@@ -65,4 +72,4 @@ do
     echo route add $ip \$1 >> chnroutes-up
     echo route delete $ip \$1 >> chnroutes-down
 done
-echo "done"
+echo "\ndone"

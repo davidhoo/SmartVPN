@@ -1,3 +1,8 @@
+#!/bin/sh
+
+echo "sina-down beging ..." >> /tmp/ppp.log
+echo $# parameters is: $@ >> /tmp/ppp.log
+
 route delete 10.0.0.0/8 ${1}
 route delete 10.13.0.0/16 ${1}
 route delete 172.16.0.0/16 ${1}
