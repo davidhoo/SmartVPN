@@ -37,11 +37,7 @@ exec 2>&-
 
 (sh /etc/ppp/chnroutes-down \$6) &
 
-currentwifi=\`networksetup -getairportnetwork 'en0'\`
-if [[ \${currentwifi/sina//} != \$currentwifi ]]
-then
-    (sh /etc/ppp/sina-down \$6) &
-fi
+(sh /etc/ppp/sina-down \$6) &
 EOF
 
 echo "update china ip list ..."
